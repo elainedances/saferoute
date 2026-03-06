@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { statusData, incidents } from "@/lib/data";
+import { getUAENow } from "@/lib/time";
 
 const threatColors = {
   critical: { bg: "bg-red-500/20", text: "text-red-400", border: "border-red-500/30", glow: "shadow-red-500/20" },
@@ -28,12 +29,15 @@ const threatColors = {
 
 export default function Dashboard() {
   const [secondsAgo, setSecondsAgo] = useState(0);
+  const [uaeTime, setUaeTime] = useState("");
 
   useEffect(() => {
     const updateInterval = setInterval(() => {
       const diff = Math.floor((Date.now() - new Date(statusData.lastUpdated).getTime()) / 1000);
       setSecondsAgo(diff);
+      setUaeTime(getUAENow());
     }, 1000);
+    setUaeTime(getUAENow());
     return () => clearInterval(updateInterval);
   }, []);
 
@@ -67,7 +71,7 @@ export default function Dashboard() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
             <Clock className="w-3 h-3" />
-            <span>Updated {formatTime(secondsAgo)}</span>
+            <span>{uaeTime} · Updated {formatTime(secondsAgo)}</span>
           </div>
         </div>
         <p className="text-sm text-[#e5e5ef]/80">{statusData.threatDescription}</p>

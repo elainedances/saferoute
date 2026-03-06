@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { mapMarkers } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
-import { Layers } from "lucide-react";
+import { Layers, Plane } from "lucide-react";
+import { formatUAETimeFull } from "@/lib/time";
 import dynamic from "next/dynamic";
 
 const MapContainer = dynamic(
@@ -27,6 +28,18 @@ const Circle = dynamic(
   () => import("react-leaflet").then((m) => m.Circle),
   { ssr: false }
 );
+
+interface LiveAircraft {
+  icao24: string;
+  callsign: string;
+  originCountry: string;
+  lat: number;
+  lng: number;
+  altitude: number | null;
+  velocity: number | null;
+  heading: number | null;
+  onGround: boolean;
+}
 
 const typeIcons: Record<string, string> = {
   airport: "✈️",
@@ -51,11 +64,29 @@ export default function MapPage() {
   const [filters, setFilters] = useState<Set<string>>(
     new Set(["airport", "embassy", "military", "nuclear", "border", "incident"])
   );
-  const [selectedMarker, setSelectedMarker] = useState<typeof mapMarkers[0] | null>(null);
+  const [showPlanes, setShowPlanes] = useState(true);
+  const [aircraft, setAircraft] = useState<LiveAircraft[]>([]);
+  const [flightCount, setFlightCount] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState<string>("");
+
+  const fetchFlights = useCallback(async () => {
+    try {
+      const res = await fetch("/api/live-flights");
+      const data = await res.json();
+      if (data.aircraft) {
+        setAircraft(data.aircraft);
+        setFlightCount(data.count);
+        setLastUpdate(formatUAETimeFull(new Date(data.timestamp)));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchFlights();
+    const interval = setInterval(fetchFlights, 30000); // refresh every 30s
+    return () => clearInterval(interval);
+  }, [fetchFlights]);
 
   const toggleFilter = (type: string) => {
     setFilters((prev) => {
@@ -86,6 +117,7 @@ export default function MapPage() {
       <style>{`
         .leaflet-container { background: #0a0a0f; }
         .custom-marker { display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; }
+        .plane-marker { display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .leaflet-popup-content-wrapper { background: #12121aee; color: #fff; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); border-radius: 12px; }
         .leaflet-popup-tip { background: #12121aee; }
         .leaflet-popup-content { margin: 8px 12px; font-size: 12px; }
@@ -134,6 +166,7 @@ export default function MapPage() {
           }}
         />
 
+        {/* Location markers */}
         {filtered.map((marker) => {
           const L = require("leaflet");
           const icon = L.divIcon({
@@ -155,9 +188,6 @@ export default function MapPage() {
               key={marker.id}
               position={[marker.lat, marker.lng]}
               icon={icon}
-              eventHandlers={{
-                click: () => setSelectedMarker(marker),
-              }}
             >
               <Popup>
                 <div>
@@ -188,6 +218,46 @@ export default function MapPage() {
             </Marker>
           );
         })}
+
+        {/* Live aircraft */}
+        {showPlanes && aircraft.map((plane) => {
+          const L = require("leaflet");
+          const heading = plane.heading ?? 0;
+          const alt = plane.altitude ? Math.round(plane.altitude * 3.281) : null; // m to ft
+          const speed = plane.velocity ? Math.round(plane.velocity * 1.944) : null; // m/s to knots
+
+          const icon = L.divIcon({
+            html: `<div style="
+              transform: rotate(${heading}deg);
+              font-size: 16px;
+              filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+              line-height: 1;
+            ">✈</div>`,
+            className: "plane-marker",
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          });
+
+          return (
+            <Marker
+              key={plane.icao24}
+              position={[plane.lat, plane.lng]}
+              icon={icon}
+            >
+              <Popup>
+                <div>
+                  <strong style={{ color: "#3b82f6" }}>{plane.callsign}</strong>
+                  <p style={{ color: "#aaa", margin: "4px 0 0", fontSize: 11 }}>
+                    {plane.originCountry}
+                    {alt && <><br />Altitude: {alt.toLocaleString()} ft</>}
+                    {speed && <><br />Speed: {speed} kts</>}
+                    {plane.onGround && <><br /><span style={{ color: "#22c55e" }}>On ground</span></>}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
 
       {/* Filter controls */}
@@ -212,7 +282,32 @@ export default function MapPage() {
             <span>{label}</span>
           </button>
         ))}
+        <div className="border-t border-white/5 my-1" />
+        <button
+          onClick={() => setShowPlanes((p) => !p)}
+          className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-xs transition-colors ${
+            showPlanes ? "bg-blue-500/20 text-blue-400" : "text-[#555570] hover:text-[#8888a0]"
+          }`}
+        >
+          <Plane className="w-3.5 h-3.5" />
+          <span>Live Flights</span>
+        </button>
       </motion.div>
+
+      {/* Live flight counter */}
+      {showPlanes && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute top-3 right-14 z-[1000] bg-[#12121a]/90 backdrop-blur-xl rounded-xl border border-white/10 px-3 py-2"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs text-blue-400 font-medium">{flightCount} aircraft</span>
+          </div>
+          <p className="text-[9px] text-[#555570] mt-0.5">UAE airspace · live</p>
+        </motion.div>
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-24 md:bottom-6 left-3 z-[1000]">
@@ -225,7 +320,16 @@ export default function MapPage() {
             <span className="w-4 h-0 border-t border-dashed border-orange-500"></span>
             <span>Caution zone — Barakah (15km)</span>
           </div>
+          <div className="flex items-center gap-2">
+            <span>✈</span>
+            <span>Live aircraft (OpenSky Network)</span>
+          </div>
         </div>
+      </div>
+
+      {/* Time display */}
+      <div className="absolute top-3 right-3 md:top-auto md:bottom-6 md:right-3 z-[1000] bg-[#12121a]/80 backdrop-blur-xl rounded-lg border border-white/10 px-3 py-1.5">
+        <p className="text-[10px] text-[#8888a0] font-mono">{lastUpdate || "Loading..."}</p>
       </div>
     </div>
   );

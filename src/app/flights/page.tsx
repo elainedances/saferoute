@@ -87,8 +87,8 @@ export default function FlightsPage() {
           {flights.map((flight, idx) => {
             const sc = statusColors[flight.status];
             const dep = new Date(flight.departure);
-            const time = dep.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-            const date = dep.toLocaleDateString("en-GB", { month: "short", day: "numeric", timeZone: "UTC" });
+            const time = dep.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Dubai" });
+            const date = dep.toLocaleDateString("en-GB", { month: "short", day: "numeric", timeZone: "Asia/Dubai" });
 
             return (
               <motion.div

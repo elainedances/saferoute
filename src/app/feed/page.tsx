@@ -23,8 +23,8 @@ export default function FeedPage() {
     const d = new Date(ts);
     const now = new Date();
     const diffH = Math.floor((now.getTime() - d.getTime()) / 3600000);
-    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-    const date = d.toLocaleDateString("en-GB", { month: "short", day: "numeric", timeZone: "UTC" });
+    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Dubai" });
+    const date = d.toLocaleDateString("en-GB", { month: "short", day: "numeric", timeZone: "Asia/Dubai" });
     return { time, date, diffH };
   };
 
