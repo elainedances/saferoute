@@ -39,6 +39,9 @@ interface LiveAircraft {
   velocity: number | null;
   heading: number | null;
   onGround: boolean;
+  registration?: string;
+  aircraftType?: string;
+  source?: string;
 }
 
 const typeIcons: Record<string, string> = {
@@ -247,7 +250,9 @@ export default function MapPage() {
               <Popup>
                 <div>
                   <strong style={{ color: "#3b82f6" }}>{plane.callsign}</strong>
+                  {plane.registration && <span style={{ color: "#888", fontSize: 10, marginLeft: 4 }}>{plane.registration}</span>}
                   <p style={{ color: "#aaa", margin: "4px 0 0", fontSize: 11 }}>
+                    {plane.aircraftType && <>{plane.aircraftType} · </>}
                     {plane.originCountry}
                     {alt && <><br />Altitude: {alt.toLocaleString()} ft</>}
                     {speed && <><br />Speed: {speed} kts</>}

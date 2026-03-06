@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 // Cloudflare Tunnel to VPS proxy (HTTPS, no port issues)
-const TUNNEL_URL = process.env.FLIGHT_TUNNEL_URL || "https://expected-athens-areas-explicit.trycloudflare.com/api/live-flights";
+const TUNNEL_URL = process.env.FLIGHT_TUNNEL_URL || "https://colors-meditation-nothing-loans.trycloudflare.com/api/live-flights";
 
 export async function GET() {
   try {
