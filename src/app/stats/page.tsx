@@ -20,13 +20,13 @@ import {
 // ── sample data spanning Feb 28 – Mar 6 2026 ──────────────────────────
 
 const missileData = [
-  { date: "Feb 28", launched: 0, intercepted: 0, rate: 0 },
-  { date: "Mar 1", launched: 0, intercepted: 0, rate: 0 },
-  { date: "Mar 2", launched: 0, intercepted: 0, rate: 0 },
-  { date: "Mar 3", launched: 0, intercepted: 0, rate: 0 },
-  { date: "Mar 4", launched: 52, intercepted: 47, rate: 90 },
-  { date: "Mar 5", launched: 78, intercepted: 74, rate: 95 },
-  { date: "Mar 6", launched: 44, intercepted: 44, rate: 100 },
+  { date: "Feb 28", missiles: 35, missilesInt: 33, drones: 80, dronesInt: 76, rate: 95 },
+  { date: "Mar 1", missiles: 15, missilesInt: 14, drones: 28, dronesInt: 28, rate: 98 },
+  { date: "Mar 2", missiles: 42, missilesInt: 40, drones: 62, dronesInt: 58, rate: 94 },
+  { date: "Mar 3", missiles: 38, missilesInt: 36, drones: 45, dronesInt: 43, rate: 95 },
+  { date: "Mar 4", missiles: 52, missilesInt: 47, drones: 70, dronesInt: 66, rate: 93 },
+  { date: "Mar 5", missiles: 7, missilesInt: 6, drones: 125, dronesInt: 119, rate: 95 },
+  { date: "Mar 6", missiles: 12, missilesInt: 12, drones: 44, dronesInt: 44, rate: 100 },
 ];
 
 const flightData = [
@@ -50,13 +50,13 @@ const priceData = [
 ];
 
 const casualtyData = [
-  { date: "Feb 28", killed: 0, injured: 0 },
-  { date: "Mar 1", killed: 0, injured: 0 },
-  { date: "Mar 2", killed: 0, injured: 0 },
-  { date: "Mar 3", killed: 0, injured: 0 },
-  { date: "Mar 4", killed: 0, injured: 2 },
-  { date: "Mar 5", killed: 0, injured: 5 },
-  { date: "Mar 6", killed: 0, injured: 0 },
+  { date: "Feb 28", killed: 0, injured: 3 },
+  { date: "Mar 1", killed: 0, injured: 5 },
+  { date: "Mar 2", killed: 0, injured: 8 },
+  { date: "Mar 3", killed: 1, injured: 12 },
+  { date: "Mar 4", killed: 0, injured: 15 },
+  { date: "Mar 5", killed: 3, injured: 58 },
+  { date: "Mar 6", killed: 0, injured: 4 },
 ];
 
 const ceasefireData = [
@@ -143,10 +143,10 @@ export default function StatsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 1 — Missiles & Drones */}
+        {/* 1 — Missiles per Day */}
         <ChartCard
-          title="Missiles & Drones per Day"
-          subtitle="Launched vs intercepted. Line shows intercept rate %."
+          title="Ballistic Missiles per Day"
+          subtitle="Launched vs intercepted. Line shows overall intercept rate %."
           delay={0.05}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -157,8 +157,29 @@ export default function StatsPage() {
               <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={axisStyle} axisLine={false} tickLine={false} unit="%" />
               <Tooltip content={<DarkTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11, color: "#8888a0" }} />
-              <Bar yAxisId="left" dataKey="launched" name="Launched" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={18} />
-              <Bar yAxisId="left" dataKey="intercepted" name="Intercepted" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={18} />
+              <Bar yAxisId="left" dataKey="missiles" name="Missiles launched" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={14} />
+              <Bar yAxisId="left" dataKey="missilesInt" name="Missiles intercepted" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={14} />
+              <Line yAxisId="right" type="monotone" dataKey="rate" name="Intercept %" stroke="#eab308" strokeWidth={2} dot={{ r: 3, fill: "#eab308" }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* 1b — Drones per Day */}
+        <ChartCard
+          title="Drones per Day"
+          subtitle="Launched vs intercepted. Drones cheaper but easier to intercept."
+          delay={0.07}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={missileData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+              <CartesianGrid {...gridStyle} />
+              <XAxis dataKey="date" tick={axisStyle} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={axisStyle} axisLine={false} tickLine={false} unit="%" />
+              <Tooltip content={<DarkTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 11, color: "#8888a0" }} />
+              <Bar yAxisId="left" dataKey="drones" name="Drones launched" fill="#f97316" radius={[3, 3, 0, 0]} barSize={14} />
+              <Bar yAxisId="left" dataKey="dronesInt" name="Drones intercepted" fill="#3b82f6" radius={[3, 3, 0, 0]} barSize={14} />
               <Line yAxisId="right" type="monotone" dataKey="rate" name="Intercept %" stroke="#eab308" strokeWidth={2} dot={{ r: 3, fill: "#eab308" }} />
             </ComposedChart>
           </ResponsiveContainer>
