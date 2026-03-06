@@ -61,7 +61,7 @@ export interface MapMarker {
 
 export const statusData: StatusData = {
   threatLevel: 'critical',
-  threatDescription: 'Active military conflict. Iran has launched 174+ ballistic missiles at UAE targets. Most intercepted by THAAD/Patriot systems. Debris incidents reported in Abu Dhabi and Dubai.',
+  threatDescription: 'Active military conflict. Iran has launched 189+ ballistic missiles, 941+ drones, and 8 cruise missiles at UAE (by Mar 4). 3 killed, 78 injured — all from intercept debris. Conflict widened to all Gulf states on Mar 6.',
   airspaceStatus: 'PARTIALLY OPEN',
   airspaceDetail: 'UAE airspace reopened with restrictions as of Mar 5. Limited commercial operations resuming from DXB and AUH. Military corridors remain active.',
   lastUpdated: '2026-03-06T09:30:00Z',

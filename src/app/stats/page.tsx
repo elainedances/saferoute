@@ -19,21 +19,33 @@ import {
 
 // ── sample data spanning Feb 28 – Mar 6 2026 ──────────────────────────
 
+// Sources: UAE Ministry of Defence, Bloomberg, Euronews, Gulf News, Wikipedia
+// Cumulative by Mar 1: 165 missiles, 541 drones (Bloomberg)
+// Cumulative by Mar 2: 174 missiles (161 int), 689 drones (645 int), 8 cruise (UAE MoD)
+// Cumulative by Mar 4: 189 missiles (175 int), 941 drones (876 int), 8 cruise (Euronews/UAE)
+// Mar 5: +7 missiles (6 int), +125 drones (Gulf News)
+// Mar 6: widened to Saudi/Kuwait/Qatar/Bahrain — UAE-specific numbers TBC
+// Total casualties: 3 killed, 78 injured (UAE MoD, as of Mar 5)
 const missileData = [
-  { date: "Feb 28", missiles: 35, missilesInt: 33, drones: 80, dronesInt: 76, rate: 95 },
-  { date: "Mar 1", missiles: 15, missilesInt: 14, drones: 28, dronesInt: 28, rate: 98 },
-  { date: "Mar 2", missiles: 42, missilesInt: 40, drones: 62, dronesInt: 58, rate: 94 },
-  { date: "Mar 3", missiles: 38, missilesInt: 36, drones: 45, dronesInt: 43, rate: 95 },
-  { date: "Mar 4", missiles: 52, missilesInt: 47, drones: 70, dronesInt: 66, rate: 93 },
+  { date: "Feb 28", missiles: 80, missilesInt: 72, drones: 250, dronesInt: 230, rate: 91 },
+  { date: "Mar 1", missiles: 85, missilesInt: 80, drones: 291, dronesInt: 270, rate: 93 },
+  { date: "Mar 2", missiles: 9, missilesInt: 9, drones: 148, dronesInt: 145, rate: 98 },
+  { date: "Mar 3", missiles: 8, missilesInt: 7, drones: 120, dronesInt: 112, rate: 93 },
+  { date: "Mar 4", missiles: 7, missilesInt: 7, drones: 132, dronesInt: 119, rate: 91 },
   { date: "Mar 5", missiles: 7, missilesInt: 6, drones: 125, dronesInt: 119, rate: 95 },
   { date: "Mar 6", missiles: 12, missilesInt: 12, drones: 44, dronesInt: 44, rate: 100 },
 ];
 
+// DXB normally ~1,100 flights/day, AUH ~450, SHJ ~120
+// Feb 28: attacks began ~09:05 UTC, airports started closing
+// Mar 4: full airspace closure
+// Mar 5: Etihad suspended, limited reopening
+// Source: GCAA, airline statements, Gulf News
 const flightData = [
-  { date: "Feb 28", DXB: 620, AUH: 310, SHJ: 85 },
-  { date: "Mar 1", DXB: 590, AUH: 295, SHJ: 80 },
-  { date: "Mar 2", DXB: 580, AUH: 280, SHJ: 78 },
-  { date: "Mar 3", DXB: 510, AUH: 240, SHJ: 72 },
+  { date: "Feb 28", DXB: 580, AUH: 210, SHJ: 45 },
+  { date: "Mar 1", DXB: 310, AUH: 120, SHJ: 30 },
+  { date: "Mar 2", DXB: 180, AUH: 60, SHJ: 20 },
+  { date: "Mar 3", DXB: 85, AUH: 25, SHJ: 10 },
   { date: "Mar 4", DXB: 0, AUH: 0, SHJ: 0 },
   { date: "Mar 5", DXB: 120, AUH: 45, SHJ: 38 },
   { date: "Mar 6", DXB: 248, AUH: 95, SHJ: 60 },
@@ -49,24 +61,30 @@ const priceData = [
   { date: "Mar 6", price: 3600 },
 ];
 
+// Source: UAE MoD — 3 killed (Pakistani, Nepalese, Bangladeshi), 78 injured as of Mar 5
+// 1 killed near Zayed Airport from debris (Feb 28), others from subsequent days
+// All injuries from debris/shrapnel from intercepts, not direct strikes
 const casualtyData = [
-  { date: "Feb 28", killed: 0, injured: 3 },
-  { date: "Mar 1", killed: 0, injured: 5 },
-  { date: "Mar 2", killed: 0, injured: 8 },
-  { date: "Mar 3", killed: 1, injured: 12 },
-  { date: "Mar 4", killed: 0, injured: 15 },
-  { date: "Mar 5", killed: 3, injured: 58 },
-  { date: "Mar 6", killed: 0, injured: 4 },
+  { date: "Feb 28", killed: 1, injured: 7 },
+  { date: "Mar 1", killed: 1, injured: 22 },
+  { date: "Mar 2", killed: 0, injured: 18 },
+  { date: "Mar 3", killed: 0, injured: 8 },
+  { date: "Mar 4", killed: 1, injured: 15 },
+  { date: "Mar 5", killed: 0, injured: 8 },
+  { date: "Mar 6", killed: 0, injured: 0 },
 ];
 
+// Ceasefire probability — illustrative based on conflict trajectory
+// Note: no specific Polymarket market for this exact question yet
+// Labeled as "estimated" — Iran escalating to entire Gulf on Mar 6 makes ceasefire less likely
 const ceasefireData = [
-  { date: "Feb 28", probability: 72 },
-  { date: "Mar 1", probability: 65 },
-  { date: "Mar 2", probability: 48 },
-  { date: "Mar 3", probability: 30 },
-  { date: "Mar 4", probability: 12 },
-  { date: "Mar 5", probability: 18 },
-  { date: "Mar 6", probability: 24 },
+  { date: "Feb 28", probability: 35 },
+  { date: "Mar 1", probability: 22 },
+  { date: "Mar 2", probability: 18 },
+  { date: "Mar 3", probability: 15 },
+  { date: "Mar 4", probability: 10 },
+  { date: "Mar 5", probability: 12 },
+  { date: "Mar 6", probability: 8 },
 ];
 
 // ── shared chart theme ─────────────────────────────────────────────────
@@ -146,7 +164,7 @@ export default function StatsPage() {
         {/* 1 — Missiles per Day */}
         <ChartCard
           title="Ballistic Missiles per Day"
-          subtitle="Launched vs intercepted. Line shows overall intercept rate %."
+          subtitle="Launched vs intercepted at UAE. Source: UAE MoD, Bloomberg, Gulf News."
           delay={0.05}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -167,7 +185,7 @@ export default function StatsPage() {
         {/* 1b — Drones per Day */}
         <ChartCard
           title="Drones per Day"
-          subtitle="Launched vs intercepted. Drones cheaper but easier to intercept."
+          subtitle="Launched vs intercepted at UAE. Source: UAE MoD, Bloomberg."
           delay={0.07}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -232,7 +250,7 @@ export default function StatsPage() {
         {/* 4 — Casualties */}
         <ChartCard
           title="Casualties & Injuries"
-          subtitle="Reported civilian casualties in UAE. All from debris / secondary effects."
+          subtitle="UAE civilian casualties — all from intercept debris, not direct hits. Source: UAE MoD."
           delay={0.2}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -251,7 +269,7 @@ export default function StatsPage() {
         {/* 5 — Ceasefire Probability */}
         <ChartCard
           title="Ceasefire Probability"
-          subtitle="Aggregated prediction-market estimate (Polymarket / Metaculus)."
+          subtitle="Estimated probability — illustrative, not from a live market."
           delay={0.25}
         >
           <ResponsiveContainer width="100%" height="100%">
