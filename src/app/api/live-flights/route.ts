@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 
-// OpenSky Network API — free, no auth needed for basic queries
+// OpenSky Network API — OAuth2 authenticated
 // UAE bounding box: lat 22.5-26.5, lon 51-57
 const OPENSKY_URL =
   "https://opensky-network.org/api/states/all?lamin=22.5&lamax=26.5&lomin=51&lomax=57";
+const TOKEN_URL =
+  "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token";
+
+const CLIENT_ID = process.env.OPENSKY_CLIENT_ID || "";
+const CLIENT_SECRET = process.env.OPENSKY_CLIENT_SECRET || "";
 
 export interface LiveAircraft {
   icao24: string;
@@ -21,20 +26,62 @@ export interface LiveAircraft {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+// Cache the access token in memory (serverless cold starts will re-fetch)
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
+async function getAccessToken(): Promise<string | null> {
+  if (!CLIENT_ID || !CLIENT_SECRET) return null;
+
+  // Return cached token if still valid (with 60s buffer)
+  if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
+    return cachedToken.token;
+  }
+
+  try {
+    const res = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+      }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    cachedToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + data.expires_in * 1000,
+    };
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   try {
+    const token = await getAccessToken();
+
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(OPENSKY_URL, {
-      next: { revalidate: 15 },
-      headers: { Accept: "application/json" },
+      headers,
+      cache: "no-store",
     });
 
     if (!res.ok) {
-      // OpenSky rate limits: return empty with status info
       return NextResponse.json({
         aircraft: [],
         count: 0,
         timestamp: Date.now(),
-        error: `OpenSky returned ${res.status} — may be rate limited (10 req/10s for anonymous)`,
+        error: `OpenSky returned ${res.status}${!token ? " (unauthenticated — set OPENSKY_CLIENT_ID/SECRET env vars)" : ""}`,
       });
     }
 
@@ -60,6 +107,7 @@ export async function GET() {
       aircraft,
       count: aircraft.length,
       timestamp: data.time * 1000,
+      authenticated: !!token,
     });
   } catch (err) {
     return NextResponse.json({
