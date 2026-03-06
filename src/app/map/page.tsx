@@ -71,7 +71,9 @@ export default function MapPage() {
 
   const fetchFlights = useCallback(async () => {
     try {
-      const res = await fetch("/api/live-flights");
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_FLIGHT_PROXY || "/api/live-flights"
+      );
       const data = await res.json();
       if (data.aircraft) {
         setAircraft(data.aircraft);
